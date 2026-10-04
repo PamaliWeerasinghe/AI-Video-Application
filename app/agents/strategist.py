@@ -1,5 +1,7 @@
-"""Strategist agent."""
+from app.models.video_state import VideoState
 
 
-def build_strategy():
-    return {"strategy": "initial"}
+def strategist(state: VideoState):
+    #Calls an LLM with search tools
+    print("Strategist: Finding trending Facebook topics...")
+    return {"topic": "Top 3 Budget EVs for 2026"}
