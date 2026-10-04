@@ -1,3 +1,10 @@
+try:
+    from dotenv import load_dotenv  # type: ignore[import-not-found]
+except ImportError:
+    def load_dotenv(*args, **kwargs):
+        return False
+
+load_dotenv()  # Load environment variables from .env file
 from app.graph import app
 
 def run():
