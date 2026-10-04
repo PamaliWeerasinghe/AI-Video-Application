@@ -1,6 +1,6 @@
 from tkinter import END
 
-from app.models.video_state import VideoState
+from app.videoState import VideoState
 
 def qa(state: VideoState):
     #Reviews the clips in state["video_file_paths"]

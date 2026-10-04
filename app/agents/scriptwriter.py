@@ -1,4 +1,4 @@
-from app.models.video_state import VideoState
+from app.videoState import VideoState
 
 def scriptwriter(state: VideoState):
     #Read the topic, writes the script

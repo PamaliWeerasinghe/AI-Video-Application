@@ -27,10 +27,10 @@ parent_builder.add_edge("director", "qa")
 
 # Define conditional feedback loop
 parent_builder.add_conditional_edges(
-    "qa_agent",
+    "qa",
     qa_router
 )
 
 # Compile with memory checkpointing
 memory = MemorySaver()
-app = parent_builder.compile(checkpointer=memory, interrupt_before=["qa_agent"])
+app = parent_builder.compile(checkpointer=memory, interrupt_before=["qa"])
