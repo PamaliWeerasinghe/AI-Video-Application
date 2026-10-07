@@ -8,6 +8,7 @@ from app.agents.director import call_director_subgraph
 # PARENT STATE (Holds only the final deliverables, No message history)
 class VideoState(TypedDict):
     topic: str
+    short_description: str
     final_script: str
     qa_status: str
     video_file_paths: Annotated[list[str], operator.add]
