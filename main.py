@@ -14,7 +14,8 @@ def run():
     }
 
     initial_input = {
-        "topic" : "Trending AI tools",
+        "topic" : "Trending AI topics",
+        "short_description" : "A short description of the video topic",
         "final_script":"",
         "qa_status":"",
         "video_file_paths":[]
