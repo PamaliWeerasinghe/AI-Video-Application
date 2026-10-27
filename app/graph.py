@@ -7,7 +7,7 @@ from app.agents.strategist import strategist
 from app.agents.scriptwriter import scriptwriter
 from app.agents.director import call_director_subgraph
 from app.agents.qa_reviewer import qa, qa_router
-from app.agents.video_scan import video_scan
+from app.agents.video_scan import scan_video_directory
 from app.agents.captions import create_caption
 
 # Initialize the graph
@@ -21,7 +21,7 @@ parent_builder.add_node("strategist", strategist)
 parent_builder.add_node("scriptwriter", scriptwriter)
 parent_builder.add_node("director", call_director_subgraph)
 parent_builder.add_node("qa", qa)
-parent_builder.add_node("video_scan",video_scan)
+parent_builder.add_node("video_scan",scan_video_directory)
 parent_builder.add_node("caption", create_caption)
 
 # Define the sequential flow
@@ -49,4 +49,5 @@ parent_builder.add_conditional_edges(
 
 # Compile with memory checkpointing
 memory = MemorySaver()
-app = parent_builder.compile(checkpointer=memory, interrupt_before=["qa"])
+# app = parent_builder.compile(checkpointer=memory, interrupt_before=["qa"])
+app = parent_builder.compile(checkpointer=memory)
