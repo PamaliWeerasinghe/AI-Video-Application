@@ -1,17 +1,23 @@
 import operator
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
+
+from typing_extensions import NotRequired
 
 from langgraph.graph import END, StateGraph
 
-from app.agents.director import call_director_subgraph
+from app.agents.director import Storyboard, call_director_subgraph
 
 # PARENT STATE (Holds only the final deliverables, No message history)
 class VideoState(TypedDict):
     topic: str
     short_description: str
     final_script: str
+    caption: str
     qa_status: str
     video_file_paths: Annotated[list[str], operator.add]
+    storyboard: Storyboard
+    scan_results: NotRequired[dict[str, Any]]
+    video_directory: NotRequired[str]
 
 
 #Build the Parent Graph

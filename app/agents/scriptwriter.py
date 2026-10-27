@@ -32,7 +32,7 @@ def _save_script(topic: str, script: str) -> Path:
 def scriptwriter(state: VideoState):
     #Read the topic, writes the script
     topic = state.get("topic", "No topic found")
-    print(f"Scriptwriter: Writing script for topic: {topic}")
+    # print(f"Scriptwriter: Writing script for topic: {topic}")
     description = state.get("short_description", "No description found")
 
     #LLM Initialization
@@ -48,7 +48,8 @@ def scriptwriter(state: VideoState):
         Always format your scripts strictly into three sections:
         [HOOK]: A compelling 3-second opening to stop the scroll.
         [BODY]: The core value proposition, keeping it fast-paced.
-        [CTA]: A strong call-to-action asking viewers to follow or comment."""),
+        [CTA]: A smooth, satisfying conclusion that seamlessly resolves the topic and completes the visual flow. Do NOT include any explicit 
+        requests to like, follow, comment, or subscribe."""),
         
         ("user", "Write a 60-second video script about this specific topic: {topic}")
     ])
@@ -56,6 +57,6 @@ def scriptwriter(state: VideoState):
     generated_script = chain.invoke({"topic": f"{topic} - {description}"})
 
     script_path = _save_script(topic, generated_script)
-    print(f"Scriptwriter: Saved script to {script_path}")
+    # print(f"Scriptwriter: Saved script to {script_path}")
 
     return {"final_script": generated_script}

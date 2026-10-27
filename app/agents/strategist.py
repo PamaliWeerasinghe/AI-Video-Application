@@ -1,48 +1,52 @@
-import os
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_community.tools import DuckDuckGoSearchRun
 from app.videoState import VideoState
-from app.videoState import VideoState
+
+
+def _parse_topic(response: str) -> tuple[str, str]:
+    topic = response.strip()
+    if not topic:
+        raise ValueError("empty topic response")
+
+    title, separator, description = topic.partition(" - ")
+    if not separator:
+        return topic, ""
+    return title.strip(), description.strip()
 
 
 def strategist(state: VideoState):
     print("Strategist: Researching real-time Facebook trends using DuckDuckGo...")
 
-    #Initializing the free DuckDuckGo Search Tool
+    # 1. Use a simple string for the web search
     search_tool = DuckDuckGoSearchRun()
-
-    #Execute the search
-    search_query = "What are the most viral and trending niches on Facebook Reels this week?"
+    search_query = "trending visual niches Facebook Reels TikTok 2026"
     search_results = search_tool.invoke(search_query)
 
-    #Initialize the LLM
+    # 2. Initialize the LLM
     llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0.7)
 
-    #Create a prompt to synthesize the search results
+    # 3. Create a prompt to synthesize the search results
     prompt = PromptTemplate.from_template(
         """
-        You are an expert social media strategist for Facebook Reels. 
+        You are an elite social media strategist specializing in Facebook Reels and TikTok monetization.
+        Your goal is to identify highly viral, visually satisfying, and high-retention broad niches based on recent search data.
+        
         Analyze the following recent web search results about current trending niches:
         
         {search_results}
         
-        Based on these trends, pick EXACTLY ONE highly engaging video niche that would go viral on Facebook.
-        Do not explain your reasoning. Just return the niche title with a short description about the niche by 
-        sepearing the nice and the description through a colon(:).
+        Based on these trends, pick EXACTLY ONE highly engaging video niche that relies on satisfying visuals, rapid transformations, or sensory details.
+        Do not explain your reasoning. Return only the niche title and a short description, separated by " - ".
         """
     )
 
-    #Chain the prompt and LLM together
+    # Chain the prompt and LLM together
     chain = prompt | llm
 
-    #Generate the topic
+    # Generate the topic
     response = chain.invoke({"search_results": search_results})
     final_topic = response.content.strip()
-    #split the final topic into title and description
-    split_result = final_topic.split(": ",1)
-    title = split_result[0]
-    description = split_result[1] 
-    print(f"Strategist: Selected topic - {final_topic}")
+    title, description = _parse_topic(final_topic)
+    # print(f"Strategist: Selected topic - {final_topic}")
     return {"topic": title, "short_description": description}
-    

@@ -73,5 +73,5 @@ def call_director_subgraph(state: VideoState) -> dict[str, Storyboard]:
     result = director_subgraph.invoke({"script": state["final_script"]})
     storyboard = result["storyboard"]
     storyboard_path = _save_storyboard(state["topic"], storyboard)
-    print(f"Director: Saved storyboard to {storyboard_path}")
+    # print(f"Director: Saved storyboard to {storyboard_path}")
     return {"storyboard": storyboard}
