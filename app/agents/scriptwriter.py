@@ -49,9 +49,11 @@ def scriptwriter(state: VideoState):
         [HOOK]: A compelling 3-second opening to stop the scroll.
         [BODY]: The core value proposition, keeping it fast-paced.
         [CTA]: A smooth, satisfying conclusion that seamlessly resolves the topic and completes the visual flow. Do NOT include any explicit 
-        requests to like, follow, comment, or subscribe."""),
+        requests to like, follow, comment, or subscribe.
+        Stay within the selected niche; do not switch to or introduce another niche.
+        Create a distinct video idea for this script while keeping it in the selected niche."""),
         
-        ("user", "Write a 60-second video script about this specific topic: {topic}")
+        ("user", "Write a 60-second video script in this selected niche: {topic}")
     ])
     chain = prompt | llm | StrOutputParser()
     generated_script = chain.invoke({"topic": f"{topic} - {description}"})
