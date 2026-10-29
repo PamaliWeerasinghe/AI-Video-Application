@@ -18,7 +18,7 @@ STORYBOARD_OUTPUT_DIR = Path(__file__).resolve().parents[2] / "storyboards"
 
 class Scene(BaseModel):
     scene_number: int
-    duration: int
+    duration: float
     visual_prompt: str
     tts_audio: str
     transition: str

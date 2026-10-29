@@ -1,6 +1,8 @@
 # app/agents/publisher.py
 import os
 import shutil
+import sys
+from pathlib import Path
 from typing import Dict, Any
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -15,7 +17,11 @@ async def publish_videos_agent(state: Dict[str, Any]) -> Dict[str, Any]:
         return {"publish_status": "skipped"}
 
     os.makedirs("videos/processed", exist_ok=True)
-    server_params = StdioServerParameters(command="python", args=["mcp_social_publisher.py"])
+    server_path = Path(__file__).resolve().parents[1] / "MCP" / "social_publisher.py"
+    server_params = StdioServerParameters(
+        command=sys.executable,
+        args=[str(server_path)],
+    )
 
     async with stdio_client(server_params) as (read, write):
         async with ClientSession(read, write) as session:

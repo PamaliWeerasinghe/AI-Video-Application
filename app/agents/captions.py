@@ -29,7 +29,7 @@ def create_caption(state: VideoState) -> dict[str, str]:
     """Generate a caption and save it under the scanned video's title."""
     print("Started creating a caption....")
     print(state.get("final_script", ""))
-    videos = state.get("scan_results", {}).get("videos", [])
+    videos = state.get("new_videos", [])
     if not videos:
         raise ValueError("Cannot save the caption because no scanned video is available.")
 

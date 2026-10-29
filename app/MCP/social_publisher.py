@@ -1,4 +1,3 @@
-# mcp_social_publisher.py
 import os
 import httpx
 from dotenv import load_dotenv
@@ -8,7 +7,7 @@ load_dotenv()
 
 mcp = FastMCP("Social-Media-Publisher")
 
-PAGE_ID = os.getenv("FB_PAGE_ID", "61596111743315")
+PAGE_ID = os.getenv("FB_PAGE_ID")
 ACCESS_TOKEN = os.getenv("FB_PAGE_ACCESS_TOKEN")
 
 @mcp.tool()
