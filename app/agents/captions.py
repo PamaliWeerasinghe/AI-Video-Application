@@ -32,6 +32,8 @@ def create_caption(state: VideoState) -> dict[str, str]:
     videos = state.get("new_videos", [])
     if not videos:
         raise ValueError("Cannot save the caption because no scanned video is available.")
+    video_path = sorted(videos)[0]
+    topic = state.get("topic") or Path(video_path).stem
 
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -56,7 +58,7 @@ def create_caption(state: VideoState) -> dict[str, str]:
     ) | StrOutputParser()
     caption = chain.invoke(
         {
-            "topic": state.get("topic", ""),
+            "topic": topic,
             "short_description": state.get("short_description", ""),
             "final_script": state.get("final_script", ""),
         }
@@ -64,7 +66,7 @@ def create_caption(state: VideoState) -> dict[str, str]:
     if not caption:
         raise ValueError("Caption generation returned an empty result.")
 
-    caption_path = _save_caption(caption, sorted(videos)[0])
+    caption_path = _save_caption(caption, video_path)
     print(f"Saved caption to {caption_path}")
 
     return {"caption": caption}
