@@ -1,16 +1,13 @@
-from typing import Any
+# app/conditional_functions.py
+from typing import Dict, Any
 
-from app.agents.video_scan import VIDEOS_DIRECTORY, scan_video_directory
+def video_scan_router_function(state: Dict[str, Any]) -> str:
+    print("Scanning Video Directory...")
+    
+    new_videos = state.get("new_videos", [])
+    if new_videos:
+        print(f"Found {len(new_videos)} video(s) ready for captioning and upload.")
+        return "has_videos"
 
-
-def video_scan_router_function(state: dict[str, Any]) -> bool:
-    """Route to caption generation only when the scan found video files."""
-    scan_results = state.get("scan_results")
-    if scan_results is None:
-        scan_results = scan_video_directory({"video_directory": str(VIDEOS_DIRECTORY)})[
-            "scan_results"
-        ]
-
-    return scan_results.get("status") == "success" and bool(
-        scan_results.get("videos")
-    )
+    print("No new videos found in videos/incoming/.")
+    return "no_videos"

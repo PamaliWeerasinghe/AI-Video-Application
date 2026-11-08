@@ -18,6 +18,7 @@ class VideoState(TypedDict):
     storyboard: Storyboard
     scan_results: NotRequired[dict[str, Any]]
     video_directory: NotRequired[str]
+    new_videos: NotRequired[list[str]]
 
 
 #Build the Parent Graph

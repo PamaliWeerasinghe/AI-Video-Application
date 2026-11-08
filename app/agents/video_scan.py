@@ -1,34 +1,40 @@
-import os
 from pathlib import Path
 from typing import Any
 
-from app.videoState import VideoState
+
+VIDEOS_DIRECTORY = Path(__file__).resolve().parents[2] / "videos"
+INCOMING_VIDEO_DIRECTORY = VIDEOS_DIRECTORY / "incoming"
+VIDEO_EXTENSIONS = {".mp4", ".mov", ".mkv", ".webm"}
 
 
-VIDEOS_DIRECTORY = Path(__file__).resolve().parents[1] / "videos"
-SUPPORTED_VIDEO_FORMATS = (".mp4", ".mov", ".avi")
+def scan_video_directory(state: dict[str, Any]) -> dict[str, Any]:
+    video_directory = Path(state.get("video_directory", INCOMING_VIDEO_DIRECTORY))
 
-
-def scan_video_directory(state: VideoState) -> dict[str, Any]:
-    """Scan the application's videos directory and store the results in graph state."""
-    directory_path = Path(state.get("video_directory", VIDEOS_DIRECTORY))
-    if not os.path.exists(directory_path):
-        scan_results = {
-            "status": "error",
-            "message": f"Directory not found: {directory_path}",
-            "videos": []
+    if not video_directory.is_dir():
+        return {
+            "new_videos": [],
+            "has_new_videos": False,
+            "scan_results": {
+                "status": "error",
+                "videos": [],
+                "count": 0,
+            },
         }
-    else:
-        found_videos = []
-        for root, _, files in os.walk(directory_path):
-            for file in files:
-                if file.lower().endswith(SUPPORTED_VIDEO_FORMATS):
-                    found_videos.append(os.path.join(root, file))
 
-        scan_results = {
+    videos = sorted(
+        str(path)
+        for path in video_directory.rglob("*")
+        if path.is_file()
+        and path.suffix.lower() in VIDEO_EXTENSIONS
+        and "processed" not in path.relative_to(video_directory).parts
+    )
+
+    return {
+        "new_videos": videos,
+        "has_new_videos": bool(videos),
+        "scan_results": {
             "status": "success",
-            "videos": found_videos,
-            "count": len(found_videos)
-        }
-
-    return {"scan_results": scan_results}
+            "videos": videos,
+            "count": len(videos),
+        },
+    }
