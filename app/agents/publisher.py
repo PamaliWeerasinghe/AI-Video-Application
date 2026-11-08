@@ -7,6 +7,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from langchain_mcp_adapters.tools import load_mcp_tools
 
+from app.agent_output import agent_print as print
 from app.agents.director import STORYBOARD_OUTPUT_DIR
 from app.agents.video_scan import VIDEOS_DIRECTORY
 

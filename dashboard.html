@@ -1,0 +1,208 @@
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Agent Pipeline Monitor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .pulse-glow { animation: pulse 1.5s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.02); }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-8">
+  <div class="max-w-4xl mx-auto space-y-6">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-white">AI Video Agent Monitor</h1>
+        <p class="text-sm text-slate-400">Real-time LangGraph execution tracker</p>
+      </div>
+      <button id="runBtn" onclick="startPipeline()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 py-2.5 rounded-lg shadow transition">
+        Run Pipeline
+      </button>
+    </div>
+
+    <!-- Active Status Bar -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+        <span class="text-xs uppercase font-semibold text-slate-400 tracking-wider">Currently Executing</span>
+        <div id="activeAgent" class="text-xl font-bold text-blue-400 mt-1">Idle</div>
+      </div>
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+        <span class="text-xs uppercase font-semibold text-slate-400 tracking-wider">Next In Queue</span>
+        <div id="nextAgent" class="text-xl font-bold text-slate-400 mt-1">None</div>
+      </div>
+    </div>
+
+    <!-- Nodes Visualizer -->
+    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4">
+      <h2 class="text-sm font-semibold uppercase text-slate-400">Pipeline Stages</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="stagesContainer">
+      </div>
+    </div>
+
+    <!-- Output from the currently executing agent -->
+    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold uppercase text-slate-400">Agent Output</h2>
+        <span id="agentOutputLabel" class="text-xs text-blue-400">Waiting for execution</span>
+      </div>
+      <pre id="agentOutput" class="font-mono text-xs text-slate-300 whitespace-pre-wrap h-48 overflow-y-auto"></pre>
+    </div>
+
+    <!-- Error Alert Box -->
+    <div id="errorBox" class="hidden bg-red-950 border border-red-700 p-5 rounded-xl space-y-2">
+      <div class="flex items-center space-x-2 text-red-400 font-bold">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        <span>Error in node: <span id="failedNodeName"></span></span>
+      </div>
+      <p id="errorMessage" class="text-sm text-red-200 font-mono"></p>
+      <pre id="stackTrace" class="text-xs bg-black/40 p-3 rounded text-red-300 overflow-x-auto max-h-48"></pre>
+    </div>
+
+    <!-- Live Log Console -->
+    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 h-44 overflow-y-auto space-y-1" id="logs">
+      <div class="text-slate-500">> Ready to start pipeline...</div>
+    </div>
+
+  </div>
+
+  <script>
+    let evtSource = null;
+    let pipelineNodes = [];
+
+    function renderStages(nodes) {
+      pipelineNodes = nodes;
+      const container = document.getElementById('stagesContainer');
+      container.replaceChildren();
+      nodes.forEach((node, index) => {
+        const card = document.createElement('div');
+        card.id = `node-${node}`;
+        card.className = 'p-4 rounded-lg bg-slate-900 border border-slate-700 text-center';
+
+        const title = document.createElement('div');
+        title.className = 'font-bold text-white';
+        title.innerText = `${index + 1}. ${node}`;
+
+        const status = document.createElement('div');
+        status.className = 'text-xs text-slate-400 mt-1 status-text';
+        status.innerText = 'Pending';
+
+        card.append(title, status);
+        container.appendChild(card);
+      });
+    }
+
+    function resetUI() {
+      document.getElementById('errorBox').classList.add('hidden');
+      document.getElementById('activeAgent').innerText = 'Starting...';
+      document.getElementById('nextAgent').innerText = 'None';
+      document.getElementById('agentOutput').innerText = '';
+      document.getElementById('agentOutputLabel').innerText = 'Waiting for execution';
+      pipelineNodes.forEach(node => {
+        const el = document.getElementById(`node-${node}`);
+        el.className = 'p-4 rounded-lg bg-slate-900 border border-slate-700 text-center';
+        el.querySelector('.status-text').innerText = 'Pending';
+      });
+    }
+
+    function log(msg) {
+      const logs = document.getElementById('logs');
+      const entry = document.createElement('div');
+      entry.innerText = `> ${msg}`;
+      logs.appendChild(entry);
+      logs.scrollTop = logs.scrollHeight;
+    }
+
+    function startPipeline() {
+      resetUI();
+      const btn = document.getElementById('runBtn');
+      btn.disabled = true;
+      btn.innerText = 'Running...';
+      log('Connecting to graph event stream...');
+
+      if (evtSource) evtSource.close();
+      evtSource = new EventSource('/stream-pipeline');
+
+      evtSource.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.type === 'init') {
+          renderStages(data.nodes);
+        }
+
+        if (data.type === 'node_start') {
+          document.getElementById('activeAgent').innerText = data.current_node;
+          document.getElementById('nextAgent').innerText = data.next_node;
+          document.getElementById('agentOutputLabel').innerText =
+            `Currently executing: ${data.current_node}`;
+          document.getElementById('agentOutput').innerText = '';
+
+          const card = document.getElementById(`node-${data.current_node}`);
+          if (card) {
+            card.className = 'p-4 rounded-lg bg-blue-950 border border-blue-500 text-center pulse-glow';
+            card.querySelector('.status-text').innerText = 'Executing...';
+          }
+          log(`Started agent: [${data.current_node}]`);
+        }
+
+        if (data.type === 'agent_output') {
+          const output = document.getElementById('agentOutput');
+          output.append(document.createTextNode(data.content));
+          output.scrollTop = output.scrollHeight;
+        }
+
+        if (data.type === 'node_success') {
+          const card = document.getElementById(`node-${data.node}`);
+          if (card) {
+            card.className = 'p-4 rounded-lg bg-emerald-950 border border-emerald-500 text-center';
+            card.querySelector('.status-text').innerText = 'Completed';
+          }
+          log(`Completed agent: [${data.node}]`);
+        }
+
+        if (data.type === 'completed') {
+          document.getElementById('activeAgent').innerText = 'All Done';
+          document.getElementById('nextAgent').innerText = 'None';
+          document.getElementById('agentOutputLabel').innerText = 'Execution complete';
+          btn.disabled = false;
+          btn.innerText = 'Run Pipeline';
+          log('Pipeline finished successfully.');
+          evtSource.close();
+        }
+
+        if (data.type === 'error') {
+          document.getElementById('activeAgent').innerText = 'Failed';
+          document.getElementById('agentOutputLabel').innerText =
+            `Failed in: ${data.failed_node}`;
+          const card = document.getElementById(`node-${data.failed_node}`);
+          if (card) {
+            card.className = 'p-4 rounded-lg bg-rose-950 border border-rose-500 text-center';
+            card.querySelector('.status-text').innerText = 'Failed';
+          }
+          document.getElementById('errorBox').classList.remove('hidden');
+          document.getElementById('failedNodeName').innerText = data.failed_node;
+          document.getElementById('errorMessage').innerText = data.error_message;
+          document.getElementById('stackTrace').innerText = data.stack_trace;
+
+          btn.disabled = false;
+          btn.innerText = 'Run Pipeline';
+          log(`ERROR: Pipeline failed at [${data.failed_node}]: ${data.error_message}`);
+          evtSource.close();
+        }
+      };
+
+      evtSource.onerror = function() {
+        btn.disabled = false;
+        btn.innerText = 'Run Pipeline';
+        evtSource.close();
+      };
+    }
+  </script>
+</body>
+</html>

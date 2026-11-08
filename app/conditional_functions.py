@@ -1,6 +1,9 @@
 # app/conditional_functions.py
 from typing import Dict, Any
 
+from app.agent_output import agent_print as print
+
+
 def video_scan_router_function(state: Dict[str, Any]) -> str:
     print("Scanning Video Directory...")
     
