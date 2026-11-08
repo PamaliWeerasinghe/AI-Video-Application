@@ -27,6 +27,20 @@ def _move_storyboard_for_video(video_path: str) -> Path | None:
     return destination
 
 
+def _tool_result_text(result: Any) -> str:
+    if isinstance(result, str):
+        return result
+    if isinstance(result, list):
+        text_blocks = [
+            block["text"]
+            for block in result
+            if isinstance(block, dict) and isinstance(block.get("text"), str)
+        ]
+        if text_blocks:
+            return "\n".join(text_blocks)
+    return str(result)
+
+
 async def publish_videos_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     new_videos = state.get("new_videos", [])
     caption = state.get("caption", "AI Generated Video Update")
@@ -58,12 +72,13 @@ async def publish_videos_agent(state: Dict[str, Any]) -> Dict[str, Any]:
                     "video_path": video_path,
                     "caption": caption
                 })
-                print(result)
-                if not isinstance(result, str) or not result.startswith(
+                result_text = _tool_result_text(result)
+                print(result_text)
+                if not result_text.startswith(
                     "Successfully published to Facebook!"
                 ):
                     raise RuntimeError(
-                        f"Failed to publish {video_path}: {result}"
+                        f"Failed to publish {video_path}: {result_text}"
                     )
 
                 # Move out of videos to avoid re-uploading

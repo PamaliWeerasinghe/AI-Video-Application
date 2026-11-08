@@ -3,9 +3,15 @@ import json
 import asyncio
 import threading
 import traceback
+from pathlib import Path
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from sse_starlette.sse import EventSourceResponse
+
+load_dotenv(Path(__file__).resolve().with_name(".env"))
+
 from app.agent_output import capture_agent_output
 from app.graph import app as graph_app
 
