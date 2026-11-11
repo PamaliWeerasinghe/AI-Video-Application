@@ -70,7 +70,55 @@ def storyboard_node(state: DirectorState):
     
     structured_llm = llm.with_structured_output(Storyboard)
     
-    prompt = f"Parse the following video script into a structured storyboard:\n\n{script}"
+    prompt = f"""You are an AI video director. Parse the following 10-second script into a structured 3-scene storyboard for video generation and synchronized captions.
+
+TIMING & SYNC RULES:
+- Total video duration is strictly 10.0 seconds.
+- Scene 1: 0.0s - 3.0s (Hook - 3.0s duration)
+- Scene 2: 3.0s - 7.0s (Body - 4.0s duration)
+- Scene 3: 7.0s - 10.0s (Conclusion - 3.0s duration)
+
+VISUAL & REALISM CONSTRAINTS:
+- Realistic & Cinematic: Visual descriptions must describe 4K realistic, grounded real-world B-roll (cinematic camera angles, natural lighting, authentic documentary style).
+- STRICTLY FORBIDDEN: No cartoon stickers, jumping animated GIFs, popup emojis, or subscribe buttons.
+
+OUTPUT FORMAT:
+Return strictly a valid JSON object (no markdown, no extra conversational text) with this exact structure:
+{{
+  "total_duration": 10.0,
+  "scenes": [
+    {{
+      "scene_id": 1,
+      "time_range": "0.0s - 3.0s",
+      "duration_seconds": 3.0,
+      "voiceover": "Exact hook spoken words",
+      "visual_description": "Photorealistic 4K cinematic scene description (no cartoons or GIFs)",
+      "search_query": "3-word B-roll search query",
+      "caption": "Short on-screen text overlay (2-4 words)"
+    }},
+    {{
+      "scene_id": 2,
+      "time_range": "3.0s - 7.0s",
+      "duration_seconds": 4.0,
+      "voiceover": "Exact body spoken words",
+      "visual_description": "Photorealistic 4K cinematic scene description (no cartoons or GIFs)",
+      "search_query": "3-word B-roll search query",
+      "caption": "Short on-screen text overlay (3-5 words)"
+    }},
+    {{
+      "scene_id": 3,
+      "time_range": "7.0s - 10.0s",
+      "duration_seconds": 3.0,
+      "voiceover": "Exact conclusion spoken words",
+      "visual_description": "Photorealistic 4K cinematic scene description (no cartoons or GIFs)",
+      "search_query": "3-word B-roll search query",
+      "caption": "Short on-screen text overlay (2-3 words)"
+    }}
+  ]
+}}
+
+Script to parse:
+{state['script']}"""
     parsed_storyboard = structured_llm.invoke([HumanMessage(content=prompt)])
     
     return {

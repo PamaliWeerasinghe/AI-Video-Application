@@ -43,11 +43,16 @@ def _tool_result_text(result: Any) -> str:
 
 async def publish_videos_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     new_videos = state.get("new_videos", [])
-    caption = state.get("caption", "AI Generated Video Update")
+    captions = state.get("captions", {})
+    default_caption = state.get("caption", "AI Generated Video Update")
 
     if not new_videos:
         print("No videos found to publish.")
         return {"publish_status": "skipped"}
+    if len(new_videos) > 1 and not captions:
+        raise ValueError(
+            "A separate storyboard caption is required for every video."
+        )
 
     processed_directory = VIDEOS_DIRECTORY / "processed"
     processed_directory.mkdir(parents=True, exist_ok=True)
@@ -67,10 +72,16 @@ async def publish_videos_agent(state: Dict[str, Any]) -> Dict[str, Any]:
                 print(f"Publishing {video_path}...")
                 if "publish_to_facebook" not in tool_dict:
                     raise RuntimeError("Facebook publishing tool is unavailable.")
+                if captions and video_path not in captions:
+                    raise ValueError(f"No generated caption found for {video_path}.")
 
                 result = await tool_dict["publish_to_facebook"].ainvoke({
                     "video_path": video_path,
-                    "caption": caption
+                    "caption": (
+                        captions[video_path]
+                        if captions
+                        else default_caption
+                    )
                 })
                 result_text = _tool_result_text(result)
                 print(result_text)

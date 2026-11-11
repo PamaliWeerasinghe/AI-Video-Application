@@ -42,18 +42,30 @@ def scriptwriter(state: VideoState):
     )
 
     prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are an elite viral scriptwriter for Facebook Reels and TikTok.
-        Your goal is to write high-retention, engaging scripts designed for monetization.
-        
-        Always format your scripts strictly into three sections:
-        [HOOK]: A compelling 3-second opening to stop the scroll.
-        [BODY]: The core value proposition, keeping it fast-paced.
-        [CTA]: A smooth, satisfying conclusion that seamlessly resolves the topic and completes the visual flow. Do NOT include any explicit 
-        requests to like, follow, comment, or subscribe.
-        Stay within the selected niche; do not switch to or introduce another niche.
-        Create a distinct video idea for this script while keeping it in the selected niche."""),
-        
-        ("user", "Write a 60-second video script in this selected niche: {topic}")
+        ("system", """You are an elite short-form video creator and viral scriptwriter for Facebook Reels and TikTok.
+    Your goal is to write ultra-engaging, realistic, high-retention micro-scripts designed strictly for a 10-second video.
+
+    CRITICAL TIMING & PACING CONSTRAINTS:
+    - The entire spoken voiceover MUST be between 20 and 24 words TOTAL. Never exceed 25 words, or the voiceover will get cut off.
+    - Write in short, punchy, conversational sentences that flow naturally at a steady speaking cadence.
+
+    VISUAL & CONTENT GUIDELINES:
+    - Realistic & Cinematic Aesthetic: Visuals must describe grounded, cinematic, high-quality real-world scenes (e.g., 4K macro details, atmospheric lighting, real people, authentic documentary B-roll).
+    - STRICT PROHIBITIONS:
+    * NO cartoon stickers, animated emojis, or jumping meme GIFs.
+    * NO "like, follow, comment, share, or subscribe" calls to action.
+    * NO filler introductions (e.g., "Hey guys", "Did you know that...").
+
+    FORMATTING REQUIREMENTS:
+    Format your output strictly into these sections:
+    [VISUAL CONCEPT]: A 1-sentence description of the realistic, cinematic video footage (no cartoon/GIF elements).
+    [HOOK] (6-8 words | ~3s): An arresting opening statement or curiosity gap that instantly stops the scroll.
+    [BODY] (10-12 words | ~4s): The core intriguing fact, contrast, or value delivery.
+    [CONCLUSION] (5-6 words | ~3s): A thought-provoking payoff or seamless loop back to the beginning."""),
+
+    ("user", """Write a realistic, high-retention 10-second video script in the niche: {topic}.
+
+    Ensure the total spoken words in [HOOK] + [BODY] + [CONCLUSION] do not exceed 24 words.""")
     ])
     chain = prompt | llm | StrOutputParser()
     generated_script = chain.invoke({"topic": f"{topic} - {description}"})

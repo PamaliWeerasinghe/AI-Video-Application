@@ -5,7 +5,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
-from langchain_core.messages import HumanMessage
 from langchain_groq import ChatGroq
 from langgraph.graph import END, StateGraph
 from pydantic import BaseModel
@@ -39,9 +38,56 @@ def storyboard_node(state: DirectorState) -> dict[str, Storyboard]:
         model_name="openai/gpt-oss-120b",
         temperature=0.7,
     )
-    structured_llm = llm.with_structured_output(Storyboard)
-    prompt = f"Parse the following video script into a structured storyboard:\n\n{state['script']}"
-    storyboard = structured_llm.invoke([HumanMessage(content=prompt)])
+    structured_llm = llm.with_structured_output(
+        Storyboard,
+        method="json_mode",
+    )
+
+    prompt = f"""You are an AI video director. Parse the following 10-second script into a structured 3-scene storyboard for video generation and synchronized captions.
+
+TIMING & SYNC RULES:
+- Total video duration is strictly 10.0 seconds.
+- Scene 1: 0.0s - 3.0s (Hook - 3.0s duration)
+- Scene 2: 3.0s - 7.0s (Body - 4.0s duration)
+- Scene 3: 7.0s - 10.0s (Conclusion - 3.0s duration)
+
+VISUAL & REALISM CONSTRAINTS:
+- Realistic & Cinematic: Visual descriptions must describe 4K realistic, grounded real-world B-roll (cinematic camera angles, natural lighting, authentic documentary style).
+- STRICTLY FORBIDDEN: No cartoon stickers, jumping animated GIFs, popup emojis, or subscribe buttons.
+
+OUTPUT FORMAT:
+Return strictly a valid JSON object (no markdown, no extra conversational text) with this exact structure:
+{{
+  "scenes": [
+    {{
+      "scene_number": 1,
+      "duration": 3.0,
+      "visual_prompt": "Photorealistic 4K cinematic scene description (no cartoons or GIFs)",
+      "tts_audio": "Exact hook spoken words",
+      "transition": "Cut"
+    }},
+    {{
+      "scene_number": 2,
+      "duration": 4.0,
+      "visual_prompt": "Photorealistic 4K cinematic scene description (no cartoons or GIFs)",
+      "tts_audio": "Exact body spoken words",
+      "transition": "Cut"
+    }},
+    {{
+      "scene_number": 3,
+      "duration": 3.0,
+      "visual_prompt": "Photorealistic 4K cinematic scene description (no cartoons or GIFs)",
+      "tts_audio": "Exact conclusion spoken words",
+      "transition": "Cut"
+    }}
+  ],
+  "cta_text": "Optional call to action, or an empty string"
+}}
+
+Script to parse:
+{state['script']}"""
+
+    storyboard = structured_llm.invoke(prompt)
     return {"storyboard": storyboard}
 
 

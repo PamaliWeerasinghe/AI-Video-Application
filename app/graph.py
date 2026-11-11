@@ -67,3 +67,16 @@ parent_builder.add_edge("publisher", END)
 memory = MemorySaver()
 # app = parent_builder.compile(checkpointer=memory, interrupt_before=["qa"])
 app = parent_builder.compile(checkpointer=memory)
+
+{
+  "scenes": [
+    {
+      "scene_number": 1,
+      "duration": 3.0,
+      "visual_prompt": "Photorealistic description of the scene",
+      "tts_audio": "The exact spoken hook",
+      "transition": "Cut"
+    }
+  ],
+  "cta_text": "Follow for more."
+}
