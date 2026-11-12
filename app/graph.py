@@ -29,6 +29,7 @@ parent_builder.add_node("publisher",publish_videos_agent)
 
 # Check for queued videos before starting a new storyboard workflow.
 parent_builder.set_entry_point("initial_video_scan")
+parent_builder.set_entry_point("strategist")
 parent_builder.add_conditional_edges(
     "initial_video_scan",
     video_scan_router_function,
@@ -67,3 +68,16 @@ parent_builder.add_edge("publisher", END)
 memory = MemorySaver()
 # app = parent_builder.compile(checkpointer=memory, interrupt_before=["qa"])
 app = parent_builder.compile(checkpointer=memory)
+
+{
+  "scenes": [
+    {
+      "scene_number": 1,
+      "duration": 3.0,
+      "visual_prompt": "Photorealistic description of the scene",
+      "tts_audio": "The exact spoken hook",
+      "transition": "Cut"
+    }
+  ],
+  "cta_text": "Follow for more."
+}

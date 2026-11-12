@@ -4,6 +4,7 @@ from pathlib import Path
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_community.tools import DuckDuckGoSearchRun
+from app.agent_output import agent_print as print
 from app.videoState import VideoState
 
 SELECTED_NICHE_PATH = Path(__file__).resolve().parents[2] / "scripts" / "selected_niche.json"

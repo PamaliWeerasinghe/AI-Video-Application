@@ -19,6 +19,7 @@ class VideoState(TypedDict):
     scan_results: NotRequired[dict[str, Any]]
     video_directory: NotRequired[str]
     new_videos: NotRequired[list[str]]
+    captions: NotRequired[dict[str, str]]
 
 
 #Build the Parent Graph

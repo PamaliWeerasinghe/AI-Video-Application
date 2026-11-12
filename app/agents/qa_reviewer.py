@@ -1,5 +1,6 @@
 from tkinter import END
 
+from app.agent_output import agent_print as print
 from app.videoState import VideoState
 
 def qa(state: VideoState):

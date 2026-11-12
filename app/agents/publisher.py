@@ -7,6 +7,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from langchain_mcp_adapters.tools import load_mcp_tools
 
+from app.agent_output import agent_print as print
 from app.agents.director import STORYBOARD_OUTPUT_DIR
 from app.agents.video_scan import VIDEOS_DIRECTORY
 
@@ -26,13 +27,32 @@ def _move_storyboard_for_video(video_path: str) -> Path | None:
     return destination
 
 
+def _tool_result_text(result: Any) -> str:
+    if isinstance(result, str):
+        return result
+    if isinstance(result, list):
+        text_blocks = [
+            block["text"]
+            for block in result
+            if isinstance(block, dict) and isinstance(block.get("text"), str)
+        ]
+        if text_blocks:
+            return "\n".join(text_blocks)
+    return str(result)
+
+
 async def publish_videos_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     new_videos = state.get("new_videos", [])
-    caption = state.get("caption", "AI Generated Video Update")
+    captions = state.get("captions", {})
+    default_caption = state.get("caption", "AI Generated Video Update")
 
     if not new_videos:
         print("No videos found to publish.")
         return {"publish_status": "skipped"}
+    if len(new_videos) > 1 and not captions:
+        raise ValueError(
+            "A separate storyboard caption is required for every video."
+        )
 
     processed_directory = VIDEOS_DIRECTORY / "processed"
     processed_directory.mkdir(parents=True, exist_ok=True)
@@ -52,17 +72,24 @@ async def publish_videos_agent(state: Dict[str, Any]) -> Dict[str, Any]:
                 print(f"Publishing {video_path}...")
                 if "publish_to_facebook" not in tool_dict:
                     raise RuntimeError("Facebook publishing tool is unavailable.")
+                if captions and video_path not in captions:
+                    raise ValueError(f"No generated caption found for {video_path}.")
 
                 result = await tool_dict["publish_to_facebook"].ainvoke({
                     "video_path": video_path,
-                    "caption": caption
+                    "caption": (
+                        captions[video_path]
+                        if captions
+                        else default_caption
+                    )
                 })
-                print(result)
-                if not isinstance(result, str) or not result.startswith(
+                result_text = _tool_result_text(result)
+                print(result_text)
+                if not result_text.startswith(
                     "Successfully published to Facebook!"
                 ):
                     raise RuntimeError(
-                        f"Failed to publish {video_path}: {result}"
+                        f"Failed to publish {video_path}: {result_text}"
                     )
 
                 # Move out of videos to avoid re-uploading
