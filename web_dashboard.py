@@ -27,6 +27,16 @@ AGENT_SEQUENCE = [
     "caption",
     "publisher",
 ]
+NEXT_NODE_OPTIONS = {
+    "initial_video_scan": "caption or strategist",
+    "strategist": "scriptwriter",
+    "scriptwriter": "director",
+    "director": "qa",
+    "qa": "video_scan",
+    "video_scan": "caption or END",
+    "caption": "publisher",
+    "publisher": "END",
+}
 pipeline_stream_lock = asyncio.Lock()
 
 
@@ -127,18 +137,12 @@ async def stream_pipeline():
 
                     if event_type == "on_chain_start" and node != current_node:
                         current_node = node
-                        curr_idx = AGENT_SEQUENCE.index(node)
-                        next_node = (
-                            AGENT_SEQUENCE[curr_idx + 1]
-                            if curr_idx + 1 < len(AGENT_SEQUENCE)
-                            else "END"
-                        )
                         yield {
                             "event": "message",
                             "data": json.dumps({
                                 "type": "node_start",
                                 "current_node": node,
-                                "next_node": next_node,
+                                "next_node": NEXT_NODE_OPTIONS[node],
                             }),
                         }
                     elif event_type == "on_chain_end" and node == current_node:
