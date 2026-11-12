@@ -29,6 +29,7 @@ parent_builder.add_node("publisher",publish_videos_agent)
 
 # Check for queued videos before starting a new storyboard workflow.
 parent_builder.set_entry_point("initial_video_scan")
+parent_builder.set_entry_point("strategist")
 parent_builder.add_conditional_edges(
     "initial_video_scan",
     video_scan_router_function,
